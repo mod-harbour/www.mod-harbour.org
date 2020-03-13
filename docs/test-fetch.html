@@ -3,6 +3,44 @@
   <head>
     <meta charset="UTF-8"/>
     <title>fetch_get_json sample</title>
+    <script>
+      function fetch_get(url, resultFn, errorFn) {
+  fetch(url, {method: "GET"})
+    .then(result =>
+      result.ok  
+        ? Promise.all([result.text(), result])
+        : Promise.reject(new Error(result.statusCode + " " + result.statusText)))
+    .then(([text, result]) => resultFn(text, result))
+    .catch(error => errorFn(error));
+}
+
+function fetch_get_json(url, resultFn, errorFn) {
+  fetch(url, {method: "GET"})
+    .then(result =>
+      result.ok  // Checks that the result has a 200 (or 20x) status code.
+        ? Promise.all([result.json(), result])
+        : Promise.reject(new Error(result.statusCode + " " + result.statusText)))
+    .then(([json, result]) => resultFn(json, result))
+    .catch(error => errorFn(error));
+}
+
+function fetch_post(url, params, resultFn, errorFn) {
+  const reqMetadata = {
+    // mode: "no-cors",
+    method: "POST",
+    // The following two lines send `params` as urlencoded.
+    body: new URLSearchParams(params),
+    headers: { "Content-Type": "application/x-www-form-urlencoded" }
+  };
+  fetch(url, reqMetadata)
+    .then(result =>
+      result.ok  // Checks that the result has a 200 (or 20x) status code.
+        ? Promise.all([result.text(), result])
+        : Promise.reject(new Error(result.status + " " + result.statusText)))
+    .then(([text, result]) => resultFn(text, result))
+    .catch(error => errorFn(error));
+}
+    </script>
   </head>
   <body>
 
