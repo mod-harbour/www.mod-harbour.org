@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8"/>
+    <title>fetch_get_json sample</title>
+    <script>
+      function fetch_get(url, resultFn, errorFn) {
+  fetch(url, {method: "GET"})
+    .then(result =>
+      result.ok  
+        ? Promise.all([result.text(), result])
+        : Promise.reject(new Error(result.statusCode + " " + result.statusText)))
+    .then(([text, result]) => resultFn(text, result))
+    .catch(error => errorFn(error));
+}
+
+function fetch_get_json(url, resultFn, errorFn) {
+  fetch(url, {method: "GET"})
+    .then(result =>
+      result.ok  // Checks that the result has a 200 (or 20x) status code.
+        ? Promise.all([result.json(), result])
+        : Promise.reject(new Error(result.statusCode + " " + result.statusText)))
+    .then(([json, result]) => resultFn(json, result))
+    .catch(error => errorFn(error));
+}
+
+function fetch_post(url, params, resultFn, errorFn) {
+  const reqMetadata = {
+    // mode: "no-cors",
+    method: "POST",
+    // The following two lines send `params` as urlencoded.
+    body: new URLSearchParams(params),
+    headers: { "Content-Type": "application/x-www-form-urlencoded" }
+  };
+  fetch(url, reqMetadata)
+    .then(result =>
+      result.ok  // Checks that the result has a 200 (or 20x) status code.
+        ? Promise.all([result.text(), result])
+        : Promise.reject(new Error(result.status + " " + result.statusText)))
+    .then(([text, result]) => resultFn(text, result))
+    .catch(error => errorFn(error));
+}
+    </script>
+  </head>
+  <body>
+
+    <h1><code>fetch_get_json</code> sample</h1>
+    
+    <p>
+      List of repositories in the GitHub
+      <a href="https://github.com/mod-harbour">mod-harbour</a> organization:
+    </p>
+    
+    <p id="loading">Loading...</p>
+    <ul id="repoList" hidden></ul>
+    <p id="error" hidden>There was an error.</p>
+
+    <script src="fetch.js"></script>
+    <script>
+      fetch_get_json(
+        "https://api.github.com/orgs/mod-harbour/repos?direction=desc",
+        (json, result) => {
+          let list = document.getElementById("repoList");
+
+          document.getElementById("loading").hidden = true;
+          list.hidden = false;
+
+          // For each element in the JSON list returned by Github, we create
+          // a `li` element in `loading` containing a link to the repository:
+          // <li><a href="{{html_url}}" target="_blank">{{name}}</a></li>
+          for (let i = 0; i < json.length; i++) {
+            let a = document.createElement("a");
+            a.href = json[i].html_url;
+            a.target = "_blank";
+            a.textContent = json[i].name;
+            let li = document.createElement("li");
+            li.appendChild(a);
+            list.appendChild(li);
+          }
+        },
+        (error) => {
+          document.getElementById("loading").hidden = true;
+          document.getElementById("error").hidden = false;
+          console.log("Error:", error);
+        }
+      );
+    </script>
+
+  </body>
+</html>
